@@ -130,14 +130,15 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
             width: 1,
           ),
         ),
-        child: BTItem(
-            notifyParent: refresh,
-            index: index,
-            picked: sbt.picked,
-            title: sbt.title,
-            link: sbt.downloadUri,
-            peers: sbt.peers,
-            seeds: sbt.seeds));
+        child: SingleChildScrollView(
+            child: BTItem(
+                notifyParent: refresh,
+                index: index,
+                picked: sbt.picked,
+                title: sbt.title,
+                link: sbt.downloadUri,
+                peers: sbt.peers,
+                seeds: sbt.seeds)));
   }
 
   refresh(int index) {
@@ -214,11 +215,11 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
                                       ? Container(
                                           alignment: Alignment(0.0, 0.0),
                                           child: Text('Connecting...',
-                                          style: const TextStyle(
-                                            fontSize: 24.0,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black,
-                                          )))
+                                              style: const TextStyle(
+                                                fontSize: 24.0,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black,
+                                              )))
                                       : Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,

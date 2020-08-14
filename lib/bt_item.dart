@@ -58,7 +58,7 @@ class BTItem extends StatelessWidget {
             children: <Widget>[
               SizedBox(width: 20),
               IconButton(
-                icon: Icon(Icons.cloud_download),
+                icon: picked ? Icon(Icons.cloud_queue) : Icon(Icons.cloud_download),
                 color: picked ? Colors.black : Colors.pink,
                 onPressed: (){
                   notifyParent(index);

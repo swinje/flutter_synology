@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'services.dart';
 import 'syno_download_tasks.dart';
 import 'dart:async';
+import 'dart:convert';
 
 class TaskScreen extends StatefulWidget {
   TaskScreen({Key key, this.notifyParent}) : super(key: key);
@@ -42,7 +43,9 @@ class _TaskScreenState extends State<TaskScreen> {
     setState(() {
       searchInProgress = true;
     });
+
     searchResults = await getTasks();
+
     if (!mounted) return;
     setState(() {
       searchInProgress = false;
@@ -102,8 +105,9 @@ class _TaskScreenState extends State<TaskScreen> {
                                   color: (task.status == 'finished' ||
                                           task.status == 'seeding')
                                       ? Colors.green
-                                      : task.status=='error' ? Colors.red :
-                                      Colors.white,
+                                      : task.status == 'error'
+                                          ? Colors.red
+                                          : Colors.white,
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: <Widget>[
@@ -123,7 +127,8 @@ class _TaskScreenState extends State<TaskScreen> {
                                               child: new Container(
                                                   padding: new EdgeInsets.only(
                                                       top: 20.0),
-                                                  child: Text(
+                                                  child: SingleChildScrollView(
+                                                      child: Text(
                                                     fixString(task.title),
                                                     overflow:
                                                         TextOverflow.ellipsis,
@@ -132,7 +137,7 @@ class _TaskScreenState extends State<TaskScreen> {
                                                       fontSize: 16.0,
                                                       color: Colors.black,
                                                     ),
-                                                  ))),
+                                                  )))),
                                           Text(
                                               task.status[0].toUpperCase() +
                                                   task.status.substring(1) +
@@ -150,9 +155,24 @@ class _TaskScreenState extends State<TaskScreen> {
                                       SizedBox(width: 30),
                                       (task.status == 'finished' ||
                                               task.status == 'seeding' ||
-                                          task.status == 'error')
-                                          ? Container()
-                                          : CircularProgressIndicator()
+                                              task.status == 'error' ||
+                                              task.status == "paused")
+                                          ? Container(child: Text(task.status))
+                                          : SizedBox(
+                                              height: 30,
+                                              width: 30,
+                                              child: Container(
+                                                  color: Colors.greenAccent,
+                                                  child: Center(
+                                                      child: Text(
+                                                    task.downloaded.toString() +
+                                                        "%",
+                                                    style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 18),
+                                                  ))))
+                                      //CircularProgressIndicator()
                                     ],
                                   )));
                         }))
@@ -160,7 +180,24 @@ class _TaskScreenState extends State<TaskScreen> {
                     child: Container(
                         alignment: Alignment(0.0, 0.0),
                         child: searchInProgress
-                            ? CircularProgressIndicator()
+                            ? SizedBox(
+                                height: 200.0,
+                                child: Stack(
+                                  children: <Widget>[
+                                    Center(
+                                      child: Container(
+                                        width: 200,
+                                        height: 200,
+                                        child: new CircularProgressIndicator(
+                                          //strokeWidth: 15,
+                                          //value: 1.0,
+                                        ),
+                                      ),
+                                    ),
+                                    Center(child: Text("Fetching")),
+                                  ],
+                                ),
+                              )
                             : Text('No downloads',
                                 style: const TextStyle(
                                   fontSize: 24.0,

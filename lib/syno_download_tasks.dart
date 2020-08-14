@@ -26,6 +26,11 @@ class SynoDownloadTasks {
     "data": data.toJson(),
     "success": success,
   };
+
+  @override
+  String toString() {
+    return data.toString() + " success " + success.toString();
+  }
 }
 
 class Data {
@@ -50,6 +55,12 @@ class Data {
     "offset": offset,
     "tasks": List<dynamic>.from(tasks.map((x) => x.toJson())),
   };
+
+  @override
+  String toString() {
+    return total.toString() + " " + offset.toString() + " " + tasks.toString();
+
+  }
 }
 
 class Task {
@@ -58,6 +69,7 @@ class Task {
   String username;
   String title;
   int size;
+  int downloaded;
   String status;
   dynamic statusExtra;
 
@@ -67,9 +79,11 @@ class Task {
     this.username,
     this.title,
     this.size,
+    this.downloaded,
     this.status,
     this.statusExtra,
   });
+
 
   factory Task.fromJson(Map<String, dynamic> json) => Task(
     id: json["id"],
@@ -79,6 +93,11 @@ class Task {
     size: json["size"],
     status: json["status"],
     statusExtra: json["status_extra"],
+    downloaded:
+      json["additional"]!=null?
+        json["additional"]["file"]!=null?
+          json["additional"]["file"].contains(1)?
+            (json["additional"]["file"][1]['size_downloaded']/json["size"]*100).round():0:0:0
   );
 
   Map<String, dynamic> toJson() => {
@@ -90,4 +109,9 @@ class Task {
     "status": status,
     "status_extra": statusExtra,
   };
+
+  @override
+  String toString() {
+    return("id $id  type $type username $username title $title size $size status $status status_extra $statusExtra downloaded $downloaded");
+  }
 }

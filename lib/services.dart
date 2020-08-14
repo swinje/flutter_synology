@@ -66,7 +66,7 @@ String makeURL(int type) {
           port +
           '/webapi/' +
           'DownloadStation/task.cgi?api=SYNO.DownloadStation.' +
-          'Task&version=1&method=list');
+          'Task&version=1&method=list&additional=file');
     case CREATE_DOWNLOAD:
       return ('http://' +
           server +
