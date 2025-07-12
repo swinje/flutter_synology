@@ -6,9 +6,25 @@ import 'bt_item.dart';
 import 'task_screen.dart';
 import 'settings_screen.dart';
 
-void main() => runApp(
-      MyApp(),
-    );
+void main() => runApp(MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Download',
+      theme: ThemeData(
+        primarySwatch: Colors.deepPurple,
+        hintColor: Colors.amber,
+        fontFamily: 'Roboto',
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.deepPurple,
+          foregroundColor: Colors.white,
+        ),
+        textTheme: TextTheme(
+          headlineLarge: TextStyle(fontSize: 36.0, fontWeight: FontWeight.bold),
+          titleLarge: TextStyle(fontSize: 24.0, fontStyle: FontStyle.normal),
+          bodyMedium: TextStyle(fontSize: 14.0, fontFamily: 'Hind'),
+        ),
+      ),
+      home: MyApp(),
+    ));
 
 class MyApp extends StatefulWidget {
   MyApp({Key? key}) : super(key: key);
@@ -46,9 +62,45 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
     bool infoSet = await loadPreferences();
     startingUp = false;
     if (infoSet) {
-      sid = await fetchAuth();
+      String? otpCode;
+      if (twoFactorEnabled) {
+        otpCode = await requestOtpIfTwoFactorEnabled();
+      }
+      sid = await fetchAuth(otpCode: otpCode);
       setState(() {});
     }
+  }
+
+  Future<String?> requestOtpIfTwoFactorEnabled() async {
+    if (twoFactorEnabled) {
+      return await showDialog<String>(
+        context: context,
+        builder: (context) {
+          final controller = TextEditingController();
+          return AlertDialog(
+            title: Text('Enter OTP Code'),
+            content: TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'OTP Code',
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, controller.text),
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+    return null;
   }
 
   void getData(String taskid) async {
@@ -160,123 +212,121 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
     setState(() {});
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => TaskScreen(notifyParent: deleted)),
+      MaterialPageRoute(
+          builder: (context) => TaskScreen(notifyParent: deleted)),
     );
   }
 
   deleted(String id) {}
 
   void showSettings(BuildContext context) async {
-    await Navigator.push(
+    final bool? didPop = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => SettingsScreen()),
     );
-    await loadSID();
+    if (didPop == false) {
+      await loadSID();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Download',
-        theme: ThemeData(
-          primarySwatch: Colors.deepPurple,
-          hintColor: Colors.amber,
-          fontFamily: 'Roboto',
-          appBarTheme: AppBarTheme(
-            backgroundColor: Colors.deepPurple,
-            foregroundColor: Colors.white,
-          ),
-          textTheme: TextTheme(
-            headlineLarge:
-                TextStyle(fontSize: 36.0, fontWeight: FontWeight.bold),
-            titleLarge: TextStyle(fontSize: 28.0, fontStyle: FontStyle.italic),
-            bodyMedium: TextStyle(fontSize: 14.0, fontFamily: 'Hind'),
-          ),
-        ),
-        home: Builder(
-            builder: (context) => Scaffold(
-                appBar: AppBar(
-                  title: Text('Download Search'),
-                  actions: <Widget>[
-                    IconButton(
-                      icon: Icon(Icons.add_link),
-                      onPressed: () async {
-                        final link = await showDialog<String>(
-                          context: context,
-                          builder: (context) {
-                            final controller = TextEditingController();
-                            return AlertDialog(
-                              title: Text('Add Download'),
-                              content: TextField(
-                                controller: controller,
-                                decoration: InputDecoration(
-                                  labelText: 'Enter link',
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, controller.text),
-                                  child: Text('OK'),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                        if (link != null && link.isNotEmpty) {
-                          final result = await createDownload(link);
-                          final bool success = result['success'] ?? false;
-                          final message = success
-                              ? 'Download created'
-                              : 'Download failed with code: ${result['code']}';
-                          final snackBar = SnackBar(content: Text(message));
-                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                        }
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.settings),
-                      onPressed: () {
-                        FocusScope.of(context).requestFocus(FocusNode());
-                        showSettings(context);
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.file_download),
-                      onPressed: () {
-                        FocusScope.of(context).requestFocus(FocusNode());
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  TaskScreen(notifyParent: deleted)),
+    return Builder(
+        builder: (context) => Scaffold(
+            appBar: AppBar(
+              title: Text('Download Search'),
+              actions: <Widget>[
+                IconButton(
+                  icon: Icon(Icons.add_link),
+                  onPressed: () async {
+                    final link = await showDialog<String>(
+                      context: context,
+                      builder: (context) {
+                        final controller = TextEditingController();
+                        return AlertDialog(
+                          title: Text('Add Download'),
+                          content: TextField(
+                            controller: controller,
+                            decoration: InputDecoration(
+                              labelText: 'Enter link',
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.pop(context, controller.text),
+                              child: Text('OK'),
+                            ),
+                          ],
                         );
                       },
-                    )
-                  ],
+                    );
+                    if (link != null && link.isNotEmpty) {
+                      final result = await createDownload(link);
+                      final bool success = result['success'] ?? false;
+                      final message = success
+                          ? 'Download created'
+                          : 'Download failed with code: ${result['code']}';
+                      final snackBar = SnackBar(content: Text(message));
+                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                    }
+                  },
                 ),
-                body: CustomScrollView(slivers: <Widget>[
-                  SliverToBoxAdapter(
-                      child: sid.isNotEmpty ? searchField() : Container()),
-                  (searchResults.data.items.isNotEmpty)
-                      ? SliverList(delegate: SliverChildBuilderDelegate(
+                IconButton(
+                  icon: Icon(Icons.settings),
+                  onPressed: () {
+                    FocusScope.of(context).requestFocus(FocusNode());
+                    showSettings(context);
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.file_download),
+                  onPressed: () {
+                    FocusScope.of(context).requestFocus(FocusNode());
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              TaskScreen(notifyParent: deleted)),
+                    );
+                  },
+                )
+              ],
+            ),
+            body: CustomScrollView(slivers: <Widget>[
+              SliverToBoxAdapter(
+                  child: sid.isNotEmpty ? searchField() : Container()),
+              (searchResults.data.items.isNotEmpty)
+                  ? SliverList(
+                      delegate: SliverChildBuilderDelegate(
                           (BuildContext context, int index) {
-                          return listItemBT(index);
-                        },
-                        childCount: searchResults.data.items.length))
-                      : searchInProgress
-                          ? SliverFillRemaining(child: progressIndicator())
-                          : SliverFillRemaining(
-                              child: sid.isNotEmpty
+                      return listItemBT(index);
+                    }, childCount: searchResults.data.items.length))
+                  : searchInProgress
+                      ? SliverFillRemaining(child: progressIndicator())
+                      : SliverFillRemaining(
+                          child: sid.isNotEmpty
+                              ? Container(
+                                  alignment: Alignment(0.0, 0.0),
+                                  child: Text('No downloads',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineLarge
+                                          ?.copyWith(
+                                            fontSize: 24.0,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface,
+                                          )))
+                              : startingUp
                                   ? Container(
                                       alignment: Alignment(0.0, 0.0),
-                                      child: Text('No downloads',
+                                      child: Text('Connecting...',
                                           style: Theme.of(context)
                                               .textTheme
                                               .headlineLarge
@@ -286,53 +336,40 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
                                                     .colorScheme
                                                     .onSurface,
                                               )))
-                                  : startingUp
-                                      ? Container(
-                                          alignment: Alignment(0.0, 0.0),
-                                          child: Text('Connecting...',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .headlineLarge
-                                                  ?.copyWith(
-                                                    fontSize: 24.0,
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .onSurface,
-                                                  )))
-                                      : Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: <Widget>[
-                                            Icon(Icons.warning,
-                                                size: 100.0,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .error),
-                                            Text('Check settings',
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .headlineLarge
-                                                    ?.copyWith(
-                                                      fontSize: 24.0,
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .onSurface,
-                                                    ))
-                                          ],
-                                        ))
-                ]),
-                floatingActionButton: sid.isEmpty
-                    ? Container()
-                    : !searchInProgress
-                        ? FloatingActionButton(
-                            onPressed: runSearch,
-                            tooltip: 'Search',
-                            child: new Icon(Icons.search))
-                        : FloatingActionButton(
-                            onPressed: stopSearch,
-                            tooltip: 'Cancel',
-                            child: new Icon(Icons.cancel)))));
+                                  : Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: <Widget>[
+                                        Icon(Icons.warning,
+                                            size: 100.0,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .error),
+                                        Text('Check settings',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .headlineLarge
+                                                ?.copyWith(
+                                                  fontSize: 24.0,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface,
+                                                ))
+                                      ],
+                                    ))
+            ]),
+            floatingActionButton: sid.isEmpty
+                ? Container()
+                : !searchInProgress
+                    ? FloatingActionButton(
+                        onPressed: runSearch,
+                        tooltip: 'Search',
+                        child: new Icon(Icons.search))
+                    : FloatingActionButton(
+                        onPressed: stopSearch,
+                        tooltip: 'Cancel',
+                        child: new Icon(Icons.cancel))));
   }
 }

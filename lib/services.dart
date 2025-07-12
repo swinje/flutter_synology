@@ -19,11 +19,12 @@ const int DELETE_DOWNLOAD = 6;
 Map<String, String> headers = {};
 late SharedPreferences prefs;
 late String username, password, server, port, destination, ver;
+late bool twoFactorEnabled;
 
-Uri makeURL(int type) {
+Uri makeURL(int type, {String? otpCode}) {
   switch (type) {
     case SID_URL:
-      return Uri.parse('http://' +
+      String url = 'http://' +
           server +
           ':' +
           port +
@@ -33,7 +34,11 @@ Uri makeURL(int type) {
           username +
           '&passwd=' +
           password +
-          '&session=DownloadStation&format=cookie');
+          '&session=DownloadStation&format=cookie';
+      if (otpCode != null && otpCode.isNotEmpty) {
+        url += '&otp_code=' + otpCode;
+      }
+      return Uri.parse(url);
     case AUTH_URL:
       return Uri.parse('http://' +
           server +
@@ -104,13 +109,15 @@ Future<bool> loadPreferences() async {
   server = prefs.getString('server') ?? "";
   port = prefs.getString('port') ?? "";
   destination = prefs.getString('destination') ?? "";
+  twoFactorEnabled = prefs.getBool('twoFactor') ?? false;
   if (username.isEmpty || password.isEmpty || server.isEmpty || port.isEmpty)
     return false;
   return true;
 }
 
-Future<String> fetchSID() async {
-  final response = await http.get(makeURL(SID_URL), headers: headers);
+Future<String> fetchSID({String? otpCode}) async {
+  final response =
+      await http.get(makeURL(SID_URL, otpCode: otpCode), headers: headers);
   updateCookie(response);
 
   if (response.statusCode == 200) {
@@ -125,7 +132,7 @@ Future<String> fetchSID() async {
   }
 }
 
-Future<String> fetchAuth() async {
+Future<String> fetchAuth({String? otpCode}) async {
   http.Response response;
   try {
     response = await http.get(makeURL(AUTH_URL), headers: headers);
@@ -147,7 +154,13 @@ Future<String> fetchAuth() async {
       print('Warning: synoDownloadStationTask is null');
       ver = '1';
     }
-    String sid = await fetchSID();
+    String sid;
+    if (otpCode != null && otpCode.isNotEmpty) {
+      sid = await fetchSID(otpCode: otpCode);
+    } else {
+      sid = await fetchSID();
+    }
+
     return sid;
   } else {
     throw Exception('Failed to load auth ${response.body}');
