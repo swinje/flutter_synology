@@ -15,6 +15,9 @@ test/
 web/
 /android
 /ios
+.gitignore
+.metadata
+.pubspec.lock
 
 
 # IntelliJ related
