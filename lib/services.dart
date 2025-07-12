@@ -202,11 +202,17 @@ Future<SynoDownloadTasks> getTasks() async {
   }
 }
 
-Future<void> createDownload(String uri) async {
+Future<Map<String, dynamic>> createDownload(String uri) async {
   final response = await http.get(
       Uri.parse(makeURL(CREATE_DOWNLOAD).toString() + uri),
       headers: headers);
   updateCookie(response);
+
+  Map<String, dynamic> decodedBody = json.decode(response.body);
+  return {
+    'code': decodedBody['error']?['code'],
+    'success': decodedBody['success'],
+  };
 }
 
 Future<void> deleteDownload(String id) async {

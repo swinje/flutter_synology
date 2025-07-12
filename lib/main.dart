@@ -201,6 +201,46 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
                   title: Text('Download Search'),
                   actions: <Widget>[
                     IconButton(
+                      icon: Icon(Icons.add_link),
+                      onPressed: () async {
+                        final link = await showDialog<String>(
+                          context: context,
+                          builder: (context) {
+                            final controller = TextEditingController();
+                            return AlertDialog(
+                              title: Text('Add Download'),
+                              content: TextField(
+                                controller: controller,
+                                decoration: InputDecoration(
+                                  labelText: 'Enter link',
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, controller.text),
+                                  child: Text('OK'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        if (link != null && link.isNotEmpty) {
+                          final result = await createDownload(link);
+                          final bool success = result['success'] ?? false;
+                          final message = success
+                              ? 'Download created'
+                              : 'Download failed with code: ${result['code']}';
+                          final snackBar = SnackBar(content: Text(message));
+                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                        }
+                      },
+                    ),
+                    IconButton(
                       icon: Icon(Icons.settings),
                       onPressed: () {
                         FocusScope.of(context).requestFocus(FocusNode());
