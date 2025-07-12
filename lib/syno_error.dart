@@ -13,33 +13,33 @@ class SynoError {
   bool success;
 
   SynoError({
-    this.error,
-    this.success,
+    required this.error,
+    required this.success,
   });
 
   factory SynoError.fromJson(Map<String, dynamic> json) => SynoError(
-    error: Error.fromJson(json["error"]),
-    success: json["success"],
-  );
+        error: Error.fromJson(json["error"]),
+        success: json["success"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "error": error.toJson(),
-    "success": success,
-  };
+        "error": error.toJson(),
+        "success": success,
+      };
 }
 
 class Error {
   int code;
 
   Error({
-    this.code,
+    required this.code,
   });
 
   factory Error.fromJson(Map<String, dynamic> json) => Error(
-    code: json["code"],
-  );
+        code: json["code"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "code": code,
-  };
+        "code": code,
+      };
 }

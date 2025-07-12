@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:liquid_progress_indicator/liquid_progress_indicator.dart';
 import 'package:flutter/material.dart';
 import 'services.dart';
 import 'syno_bt.dart';
@@ -7,10 +6,12 @@ import 'bt_item.dart';
 import 'task_screen.dart';
 import 'settings_screen.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(
+      MyApp(),
+    );
 
 class MyApp extends StatefulWidget {
-  MyApp({Key key}) : super(key: key);
+  MyApp({Key? key}) : super(key: key);
 
   @override
   _MyAppState createState() => _MyAppState();
@@ -20,12 +21,13 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
-  SynoBt searchResults;
-  Timer timer;
-  String taskid;
+  SynoBt searchResults = SynoBt(data: Data(items: []), success: false);
+  Timer? timer;
+  String taskid = "";
   bool searchInProgress = false;
   final searchController = TextEditingController();
-  String sid;
+  final FocusNode searchFocusNode = FocusNode();
+  String sid = "";
   bool startingUp = true;
 
   @override
@@ -52,7 +54,8 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
   void getData(String taskid) async {
     searchResults = await getResults(taskid);
     setState(() {});
-    if (searchResults.data.finished || searchResults.data.items.length >= 25) {
+    if ((searchResults.data.finished ?? false) ||
+        searchResults.data.items.length >= 25) {
       timer?.cancel();
       searchInProgress = false;
     }
@@ -60,6 +63,7 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
 
   void runSearch() async {
     FocusScope.of(context).requestFocus(FocusNode());
+    FocusScope.of(context).unfocus();
 
     if (searchController.text.length == 0) return;
 
@@ -68,7 +72,7 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
     });
 
     taskid = await doSearch(searchController.text);
-    if (taskid != null) {
+    if (taskid.isNotEmpty) {
       getData(taskid);
       timer =
           Timer.periodic(Duration(seconds: 15), (Timer t) => getData(taskid));
@@ -81,57 +85,66 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
     setState(() {
       searchInProgress = false;
     });
+    FocusScope.of(context).requestFocus(searchFocusNode);
   }
 
   Widget progressIndicator() {
-    return LiquidLinearProgressIndicator(
-      value: 0.5,
-      valueColor: AlwaysStoppedAnimation(Colors.pink),
-      backgroundColor: Colors.white,
-      borderColor: Colors.white,
-      borderWidth: 0.0,
-      borderRadius: 0.0,
-      direction: Axis.horizontal,
-      center: Text("Loading...",
-          style: const TextStyle(
-            fontSize: 48.0,
-            fontWeight: FontWeight.bold,
-            color: Colors.blue,
-          )),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Text("Loading...",
+            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                )),
+        const SizedBox(height: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 50.0),
+          child: LinearProgressIndicator(
+            valueColor:
+                AlwaysStoppedAnimation(Theme.of(context).colorScheme.secondary),
+          ),
+        ),
+      ],
     );
   }
 
   Widget searchField() {
     return TextFormField(
-      cursorColor: Colors.blue,
+      cursorColor: Colors.white,
+      cursorWidth: 3.0,
       controller: searchController,
-      style: TextStyle(fontSize: 24.0, color: Colors.white),
+      focusNode: searchFocusNode,
+      enabled: !searchInProgress,
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          fontSize: 24.0, color: Theme.of(context).colorScheme.onPrimary),
       decoration: new InputDecoration(
-          fillColor: Colors.pink,
+          fillColor: Theme.of(context).colorScheme.secondary,
           filled: true,
           contentPadding:
               EdgeInsets.only(bottom: 10.0, left: 10.0, right: 10.0),
           labelText: "Enter search term",
-          labelStyle: TextStyle(color: Colors.white, fontSize: 20.0)),
+          labelStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontSize: 20.0, color: Theme.of(context).colorScheme.onPrimary)),
     );
   }
 
   Widget listItemBT(int index) {
-    if (index >= searchResults.data.items.length) return null;
+    if (index >= searchResults.data.items.length) return Container();
 
     Item sbt = searchResults.data.items[index];
 
     return Container(
         padding: EdgeInsets.symmetric(vertical: 5.0),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           border: Border.all(
-            color: Colors.black,
+            color: Theme.of(context).colorScheme.onSurface,
             width: 1,
           ),
         ),
         child: SingleChildScrollView(
             child: BTItem(
+                key: Key("btitem"),
                 notifyParent: refresh,
                 index: index,
                 picked: sbt.picked,
@@ -141,10 +154,14 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
                 seeds: sbt.seeds)));
   }
 
-  refresh(int index) {
+  refresh(BuildContext context, int index) {
     searchResults.data.items[index].picked = true;
     createDownload(searchResults.data.items[index].downloadUri);
     setState(() {});
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => TaskScreen(notifyParent: deleted)),
+    );
   }
 
   deleted(String id) {}
@@ -159,11 +176,24 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Download',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          primarySwatch: Colors.deepPurple,
+          hintColor: Colors.amber,
+          fontFamily: 'Roboto',
+          appBarTheme: AppBarTheme(
+            backgroundColor: Colors.deepPurple,
+            foregroundColor: Colors.white,
+          ),
+          textTheme: TextTheme(
+            headlineLarge:
+                TextStyle(fontSize: 36.0, fontWeight: FontWeight.bold),
+            titleLarge: TextStyle(fontSize: 28.0, fontStyle: FontStyle.italic),
+            bodyMedium: TextStyle(fontSize: 14.0, fontFamily: 'Hind'),
+          ),
         ),
         home: Builder(
             builder: (context) => Scaffold(
@@ -193,33 +223,42 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
                 ),
                 body: CustomScrollView(slivers: <Widget>[
                   SliverToBoxAdapter(
-                      child: sid != null ? searchField() : Container()),
-                  (searchResults != null && searchResults.data.items.length > 0)
+                      child: sid.isNotEmpty ? searchField() : Container()),
+                  (searchResults.data.items.isNotEmpty)
                       ? SliverList(delegate: SliverChildBuilderDelegate(
                           (BuildContext context, int index) {
                           return listItemBT(index);
-                        }))
+                        },
+                        childCount: searchResults.data.items.length))
                       : searchInProgress
                           ? SliverFillRemaining(child: progressIndicator())
                           : SliverFillRemaining(
-                              child: sid != null
+                              child: sid.isNotEmpty
                                   ? Container(
                                       alignment: Alignment(0.0, 0.0),
                                       child: Text('No downloads',
-                                          style: const TextStyle(
-                                            fontSize: 24.0,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black,
-                                          )))
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headlineLarge
+                                              ?.copyWith(
+                                                fontSize: 24.0,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface,
+                                              )))
                                   : startingUp
                                       ? Container(
                                           alignment: Alignment(0.0, 0.0),
                                           child: Text('Connecting...',
-                                              style: const TextStyle(
-                                                fontSize: 24.0,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.black,
-                                              )))
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .headlineLarge
+                                                  ?.copyWith(
+                                                    fontSize: 24.0,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurface,
+                                                  )))
                                       : Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
@@ -227,17 +266,24 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
                                               CrossAxisAlignment.center,
                                           children: <Widget>[
                                             Icon(Icons.warning,
-                                                size: 100.0, color: Colors.red),
+                                                size: 100.0,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .error),
                                             Text('Check settings',
-                                                style: const TextStyle(
-                                                  fontSize: 24.0,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.black,
-                                                ))
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .headlineLarge
+                                                    ?.copyWith(
+                                                      fontSize: 24.0,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSurface,
+                                                    ))
                                           ],
                                         ))
                 ]),
-                floatingActionButton: sid == null
+                floatingActionButton: sid.isEmpty
                     ? Container()
                     : !searchInProgress
                         ? FloatingActionButton(

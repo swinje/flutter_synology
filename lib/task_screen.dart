@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'services.dart';
 import 'syno_download_tasks.dart';
 import 'dart:async';
-import 'dart:convert';
 
 class TaskScreen extends StatefulWidget {
-  TaskScreen({Key key, this.notifyParent}) : super(key: key);
+  TaskScreen({Key? key, required this.notifyParent}) : super(key: key);
 
   final Function(String id) notifyParent;
 
@@ -14,10 +13,10 @@ class TaskScreen extends StatefulWidget {
 }
 
 class _TaskScreenState extends State<TaskScreen> {
-  SynoDownloadTasks searchResults;
+  SynoDownloadTasks searchResults = SynoDownloadTasks(data: Data(tasks: [], total: 0, offset: 0), success: false);
   bool searchInProgress = true;
-  String sid;
-  Timer t;
+  late String sid;
+  Timer? t;
 
   @override
   void initState() {
@@ -70,13 +69,9 @@ class _TaskScreenState extends State<TaskScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Downloads',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
         home: Scaffold(
             appBar: AppBar(
                 automaticallyImplyLeading: false,
@@ -85,7 +80,7 @@ class _TaskScreenState extends State<TaskScreen> {
                   onPressed: () => Navigator.pop(context, false),
                 ),
                 title: Text('Downloads')),
-            body: (searchResults != null && searchResults.data.tasks.length > 0)
+            body: (searchResults.data.tasks.length > 0)
                 ? Scrollbar(
                     child: ListView.builder(
                         itemCount: searchResults.data.tasks.length,
@@ -94,9 +89,9 @@ class _TaskScreenState extends State<TaskScreen> {
                           return Container(
                               padding: EdgeInsets.symmetric(vertical: 5.0),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.surface,
                                 border: Border.all(
-                                  color: Colors.black,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                   width: 1,
                                 ),
                               ),
@@ -104,16 +99,16 @@ class _TaskScreenState extends State<TaskScreen> {
                                   height: 120,
                                   color: (task.status == 'finished' ||
                                           task.status == 'seeding')
-                                      ? Colors.green
+                                      ? Theme.of(context).colorScheme.secondary
                                       : task.status == 'error'
-                                          ? Colors.red
-                                          : Colors.white,
+                                          ? Theme.of(context).colorScheme.error
+                                          : Theme.of(context).colorScheme.surface,
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: <Widget>[
                                       IconButton(
                                         icon: Icon(Icons.delete),
-                                        highlightColor: Colors.pink,
+                                        highlightColor: Theme.of(context).colorScheme.secondary,
                                         onPressed: () {
                                           runDelete(index, task.id);
                                           widget.notifyParent(task.id);
@@ -133,9 +128,9 @@ class _TaskScreenState extends State<TaskScreen> {
                                                     overflow:
                                                         TextOverflow.ellipsis,
                                                     maxLines: null,
-                                                    style: const TextStyle(
+                                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                                       fontSize: 16.0,
-                                                      color: Colors.black,
+                                                      color: Theme.of(context).colorScheme.onSurface,
                                                     ),
                                                   )))),
                                           Text(
@@ -145,10 +140,10 @@ class _TaskScreenState extends State<TaskScreen> {
                                                   (task.size / 1000000)
                                                       .toStringAsFixed(0) +
                                                   ' MB)',
-                                              style: const TextStyle(
+                                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                                 fontSize: 16.0,
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.black,
+                                                color: Theme.of(context).colorScheme.onSurface,
                                               ))
                                         ],
                                       ),
@@ -162,15 +157,16 @@ class _TaskScreenState extends State<TaskScreen> {
                                               height: 30,
                                               width: 30,
                                               child: Container(
-                                                  color: Colors.greenAccent,
+                                                  color: Theme.of(context).colorScheme.tertiaryContainer,
                                                   child: Center(
                                                       child: Text(
                                                     task.downloaded.toString() +
                                                         "%",
-                                                    style: TextStyle(
+                                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                                         fontWeight:
                                                             FontWeight.bold,
-                                                        fontSize: 18),
+                                                        fontSize: 18,
+                                                        color: Theme.of(context).colorScheme.onTertiaryContainer),
                                                   ))))
                                       //CircularProgressIndicator()
                                     ],
@@ -189,9 +185,9 @@ class _TaskScreenState extends State<TaskScreen> {
                                         width: 200,
                                         height: 200,
                                         child: new CircularProgressIndicator(
-                                          //strokeWidth: 15,
-                                          //value: 1.0,
-                                        ),
+                                            //strokeWidth: 15,
+                                            //value: 1.0,
+                                            ),
                                       ),
                                     ),
                                     Center(child: Text("Fetching")),
@@ -199,10 +195,9 @@ class _TaskScreenState extends State<TaskScreen> {
                                 ),
                               )
                             : Text('No downloads',
-                                style: const TextStyle(
+                                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                                   fontSize: 24.0,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ))))));
   }
 }

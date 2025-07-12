@@ -13,33 +13,33 @@ class SynoTask {
   bool success;
 
   SynoTask({
-    this.data,
-    this.success,
+    required this.data,
+    required this.success,
   });
 
   factory SynoTask.fromJson(Map<String, dynamic> json) => SynoTask(
-    data: Data.fromJson(json["data"]),
-    success: json["success"],
-  );
+        data: Data.fromJson(json["data"]),
+        success: json["success"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "data": data.toJson(),
-    "success": success,
-  };
+        "data": data.toJson(),
+        "success": success,
+      };
 }
 
 class Data {
   String taskid;
 
   Data({
-    this.taskid,
+    required this.taskid,
   });
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
-    taskid: json["taskid"],
-  );
+        taskid: json["taskid"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "taskid": taskid,
-  };
+        "taskid": taskid,
+      };
 }

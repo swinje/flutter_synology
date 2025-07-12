@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'main.dart';
 
 class SettingsScreen extends StatefulWidget {
-  SettingsScreen({Key key}) : super(key: key);
+  SettingsScreen({Key? key}) : super(key: key);
 
   @override
   _SettingsScreenState createState() => _SettingsScreenState();
@@ -11,7 +10,8 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _formKey = GlobalKey<FormState>();
-  SharedPreferences prefs;
+  late SharedPreferences prefs;
+  bool _obscureText = true;
 
   TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -28,11 +28,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void loadPreferences() async {
     prefs = await SharedPreferences.getInstance();
-    usernameController.text = prefs.getString('username');
-    passwordController.text = prefs.getString('password');
-    serverController.text = prefs.getString('server');
-    portController.text = prefs.getString('port');
-    destinationController.text = prefs.getString('destination');
+    usernameController.text = prefs.getString('username') ?? "";
+    passwordController.text = prefs.getString('password') ?? "";
+    serverController.text = prefs.getString('server') ?? "192.168.0.5";
+    portController.text = prefs.getString('port') ?? "5000";
+    destinationController.text = prefs.getString('destination') ?? "video";
   }
 
   @override
@@ -55,9 +55,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Settings',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
         home: Scaffold(
             appBar: AppBar(
                 automaticallyImplyLeading: false,
@@ -75,33 +72,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           TextFormField(
                               controller: usernameController,
                               keyboardType: TextInputType.text,
-                              decoration: new InputDecoration(
+                              decoration: InputDecoration(
                                   hintText: 'user',
                                   labelText: 'Username',
                                   filled: true,
                                   contentPadding: EdgeInsets.only(
                                       bottom: 10.0, left: 10.0, right: 10.0),
-                                  labelStyle: TextStyle(
-                                      color: Colors.black, fontSize: 20.0)),
+                                  labelStyle: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface)),
                               validator: (value) {
-                                if (value.isEmpty) {
+                                if (value!.isEmpty) {
                                   return 'Please enter some text';
                                 }
                                 return null;
                               }),
                           TextFormField(
                               controller: passwordController,
-                              obscureText: true,
-                              decoration: new InputDecoration(
+                              obscureText: _obscureText,
+                              decoration: InputDecoration(
                                   hintText: 'password',
                                   labelText: 'Password',
                                   filled: true,
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscureText ? Icons.visibility : Icons.visibility_off,
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscureText = !_obscureText;
+                                      });
+                                    },
+                                  ),
                                   contentPadding: EdgeInsets.only(
                                       bottom: 10.0, left: 10.0, right: 10.0),
-                                  labelStyle: TextStyle(
-                                      color: Colors.black, fontSize: 20.0)),
+                                  labelStyle: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface)),
                               validator: (value) {
-                                if (value.isEmpty) {
+                                if (value!.isEmpty) {
                                   return 'Please enter some text';
                                 }
                                 return null;
@@ -109,16 +127,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           TextFormField(
                               controller: serverController,
                               keyboardType: TextInputType.text,
-                              decoration: new InputDecoration(
+                              decoration: InputDecoration(
                                   hintText: 'server',
                                   labelText: 'Server',
                                   filled: true,
                                   contentPadding: EdgeInsets.only(
                                       bottom: 10.0, left: 10.0, right: 10.0),
-                                  labelStyle: TextStyle(
-                                      color: Colors.black, fontSize: 20.0)),
+                                  labelStyle: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface)),
                               validator: (value) {
-                                if (value.isEmpty) {
+                                if (value!.isEmpty) {
                                   return 'Please enter some text';
                                 }
                                 return null;
@@ -126,16 +149,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           TextFormField(
                               controller: portController,
                               keyboardType: TextInputType.text,
-                              decoration: new InputDecoration(
+                              decoration: InputDecoration(
                                   hintText: 'port',
                                   labelText: 'Port',
                                   filled: true,
                                   contentPadding: EdgeInsets.only(
                                       bottom: 10.0, left: 10.0, right: 10.0),
-                                  labelStyle: TextStyle(
-                                      color: Colors.black, fontSize: 20.0)),
+                                  labelStyle: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface)),
                               validator: (value) {
-                                if (value.isEmpty) {
+                                if (value!.isEmpty) {
                                   return 'Please enter some text';
                                 }
                                 return null;
@@ -143,31 +171,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           TextFormField(
                               controller: destinationController,
                               keyboardType: TextInputType.text,
-                              decoration: new InputDecoration(
+                              decoration: InputDecoration(
                                   hintText: 'destination',
                                   labelText: 'Destination',
                                   filled: true,
                                   contentPadding: EdgeInsets.only(
                                       bottom: 10.0, left: 10.0, right: 10.0),
-                                  labelStyle: TextStyle(
-                                      color: Colors.black, fontSize: 20.0)),
+                                  labelStyle: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface)),
                               validator: (value) {
-                                if (value.isEmpty) {
+                                if (value!.isEmpty) {
                                   return 'Please enter some text';
                                 }
                                 return null;
                               }),
                           Container(
                             width: width,
-                            child: new RaisedButton(
-                              child: new Text(
-                                'Save',
-                                style: new TextStyle(color: Colors.white),
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primary, // background
+                                foregroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimary, // foreground
                               ),
                               onPressed: () => saveGoBack(),
-                              color: Colors.blue,
+                              child: Text('Save'),
                             ),
-                            margin: new EdgeInsets.all(20.0),
+                            margin: const EdgeInsets.all(20.0),
                           )
                         ],
                       ),

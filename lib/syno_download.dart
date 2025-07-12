@@ -4,7 +4,8 @@
 
 import 'dart:convert';
 
-SynoDownload synoDownloadFromJson(String str) => SynoDownload.fromJson(json.decode(str));
+SynoDownload synoDownloadFromJson(String str) =>
+    SynoDownload.fromJson(json.decode(str));
 
 String synoDownloadToJson(SynoDownload data) => json.encode(data.toJson());
 
@@ -13,33 +14,33 @@ class SynoDownload {
   bool success;
 
   SynoDownload({
-    this.data,
-    this.success,
+    required this.data,
+    required this.success,
   });
 
   factory SynoDownload.fromJson(Map<String, dynamic> json) => SynoDownload(
-    data: Data.fromJson(json["data"]),
-    success: json["success"],
-  );
+        data: Data.fromJson(json["data"]),
+        success: json["success"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "data": data.toJson(),
-    "success": success,
-  };
+        "data": data.toJson(),
+        "success": success,
+      };
 }
 
 class Data {
   String sid;
 
   Data({
-    this.sid,
+    required this.sid,
   });
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
-    sid: json["sid"],
-  );
+        sid: json["sid"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "sid": sid,
-  };
+        "sid": sid,
+      };
 }

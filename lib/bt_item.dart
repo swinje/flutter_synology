@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 
 class BTItem extends StatelessWidget {
   BTItem({
-    Key key,
-    this.notifyParent,
-    this.index,
-    this.picked,
-    this.title,
-    this.link,
-    this.peers,
-    this.seeds,
+    required Key? key,
+    required this.notifyParent,
+    required this.index,
+    required this.picked,
+    required this.title,
+    required this.link,
+    required this.peers,
+    required this.seeds,
   }) : super(key: key);
 
-  final Function(int index) notifyParent;
-  final int   index;
-  final bool  picked;
+  final Function(BuildContext context, int index) notifyParent;
+  final int index;
+  final bool picked;
   final String title;
   final String link;
   final int peers;
@@ -36,15 +36,13 @@ class BTItem extends StatelessWidget {
             children: <Widget>[
               SizedBox(width: 10),
               Container(
-                width: width-40,
+                width: width - 40,
                 child: Text(
                   '$title',
                   maxLines: null,
-                  style: const TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: 16.0,
+                      color: Theme.of(context).colorScheme.onSurface),
                 ),
               ),
             ],
@@ -58,11 +56,15 @@ class BTItem extends StatelessWidget {
             children: <Widget>[
               SizedBox(width: 20),
               IconButton(
-                icon: picked ? Icon(Icons.cloud_queue) : Icon(Icons.cloud_download),
-                color: picked ? Colors.black : Colors.pink,
-                onPressed: (){
-                  notifyParent(index);
-                  },
+                icon: picked
+                    ? Icon(Icons.cloud_queue)
+                    : Icon(Icons.cloud_download),
+                color: picked
+                    ? Theme.of(context).colorScheme.onSurface
+                    : Theme.of(context).colorScheme.secondary,
+                onPressed: () {
+                  notifyParent(context, index);
+                },
               ),
               SizedBox(width: 40),
               Text(
