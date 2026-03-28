@@ -8,13 +8,13 @@ import 'syno_error.dart';
 import 'syno_bt.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const int SID_URL = 0;
-const int AUTH_URL = 1;
-const int SEARCH_URL = 2;
-const int RESULT_URL = 3;
-const int TASKS_URL = 4;
-const int CREATE_DOWNLOAD = 5;
-const int DELETE_DOWNLOAD = 6;
+const int sidUrl = 0;
+const int authUrl = 1;
+const int searchUrl = 2;
+const int resultUrl = 3;
+const int tasksUrl = 4;
+const int createDownload = 5;
+const int deleteDownload = 6;
 
 Map<String, String> headers = {};
 late SharedPreferences prefs;
@@ -23,72 +23,31 @@ late bool twoFactorEnabled;
 
 Uri makeURL(int type, {String? otpCode}) {
   switch (type) {
-    case SID_URL:
-      String url = 'http://' +
-          server +
-          ':' +
-          port +
-          '/webapi/auth.cgi?api=SYNO.API.Auth&version=' +
-          ver +
-          '&method=login&account=' +
-          username +
-          '&passwd=' +
-          password +
-          '&session=DownloadStation&format=cookie';
+    case sidUrl:
+      String url =
+          'http://$server:$port/webapi/auth.cgi?api=SYNO.API.Auth&version=$ver&method=login&account=$username&passwd=$password&session=DownloadStation&format=cookie';
       if (otpCode != null && otpCode.isNotEmpty) {
-        url += '&otp_code=' + otpCode;
+        url += '&otp_code=$otpCode';
       }
       return Uri.parse(url);
-    case AUTH_URL:
-      return Uri.parse('http://' +
-          server +
-          ':' +
-          port +
-          '/webapi/query.cgi?api=SYNO.API.Info&version=1&' +
-          'method=query&query=SYNO.API.Auth,SYNO.DownloadStation.Task');
-    case SEARCH_URL:
-      return Uri.parse('http://' +
-          server +
-          ':' +
-          port +
-          '/webapi/' +
-          'DownloadStation/btsearch.cgi?api=SYNO.DownloadStation' +
-          '.BTSearch&version=1&method=start&module=enabled&keyword=');
-    case RESULT_URL:
-      return Uri.parse('http://' +
-          server +
-          ':' +
-          port +
-          '/webapi/' +
-          'DownloadStation/btsearch.cgi?api=SYNO.DownloadStation.' +
-          'BTSearch&version=1&method=list&offset=0&limit=25&sort_by=seeds' +
-          '&filter_category=&filter_title=&sort_direction=DESC&taskid=');
-    case TASKS_URL:
-      return Uri.parse('http://' +
-          server +
-          ':' +
-          port +
-          '/webapi/' +
-          'DownloadStation/task.cgi?api=SYNO.DownloadStation.' +
-          'Task&version=1&method=list&additional=file');
-    case CREATE_DOWNLOAD:
-      return Uri.parse('http://' +
-          server +
-          ':' +
-          port +
-          '/webapi/' +
-          'DownloadStation/task.cgi?api=SYNO.DownloadStation.' +
-          'Task&version=1&method=create&destination=' +
-          destination +
-          '&uri=');
-    case DELETE_DOWNLOAD:
-      return Uri.parse('http://' +
-          server +
-          ':' +
-          port +
-          '/webapi/' +
-          'DownloadStation/task.cgi?api=SYNO.DownloadStation.' +
-          'Task&version=1&method=delete&id=');
+    case authUrl:
+      return Uri.parse(
+          'http://$server:$port/webapi/query.cgi?api=SYNO.API.Info&version=1&method=query&query=SYNO.API.Auth,SYNO.DownloadStation.Task');
+    case searchUrl:
+      return Uri.parse(
+          'http://$server:$port/webapi/DownloadStation/btsearch.cgi?api=SYNO.DownloadStation.BTSearch&version=1&method=start&module=enabled&keyword=');
+    case resultUrl:
+      return Uri.parse(
+          'http://$server:$port/webapi/DownloadStation/btsearch.cgi?api=SYNO.DownloadStation.BTSearch&version=1&method=list&offset=0&limit=25&sort_by=seeds&filter_category=&filter_title=&sort_direction=DESC&taskid=');
+    case tasksUrl:
+      return Uri.parse(
+          'http://$server:$port/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=list&additional=file');
+    case createDownload:
+      return Uri.parse(
+          'http://$server:$port/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=create&destination=$destination&uri=');
+    case deleteDownload:
+      return Uri.parse(
+          'http://$server:$port/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=delete&id=');
   }
   return Uri.parse("");
 }
@@ -110,14 +69,15 @@ Future<bool> loadPreferences() async {
   port = prefs.getString('port') ?? "";
   destination = prefs.getString('destination') ?? "";
   twoFactorEnabled = prefs.getBool('twoFactor') ?? false;
-  if (username.isEmpty || password.isEmpty || server.isEmpty || port.isEmpty)
+  if (username.isEmpty || password.isEmpty || server.isEmpty || port.isEmpty) {
     return false;
+  }
   return true;
 }
 
 Future<String> fetchSID({String? otpCode}) async {
   final response =
-      await http.get(makeURL(SID_URL, otpCode: otpCode), headers: headers);
+      await http.get(makeURL(sidUrl, otpCode: otpCode), headers: headers);
   updateCookie(response);
 
   if (response.statusCode == 200) {
@@ -135,7 +95,7 @@ Future<String> fetchSID({String? otpCode}) async {
 Future<String> fetchAuth({String? otpCode}) async {
   http.Response response;
   try {
-    response = await http.get(makeURL(AUTH_URL), headers: headers);
+    response = await http.get(makeURL(authUrl), headers: headers);
   } catch (e) {
     return ''; // Return empty string instead of null
   }
@@ -169,7 +129,7 @@ Future<String> fetchAuth({String? otpCode}) async {
 
 Future<String> doSearch(String searchTerm) async {
   Uri searchString =
-      Uri.parse(makeURL(SEARCH_URL).toString() + Uri.encodeFull(searchTerm));
+      Uri.parse(makeURL(searchUrl).toString() + Uri.encodeFull(searchTerm));
 
   final response = await http.get(searchString, headers: headers);
   updateCookie(response);
@@ -190,9 +150,8 @@ Future<String> doSearch(String searchTerm) async {
 }
 
 Future<SynoBt> getResults(String taskid) async {
-  final response = await http.get(
-      Uri.parse(makeURL(RESULT_URL).toString() + taskid),
-      headers: headers);
+  final response = await http
+      .get(Uri.parse(makeURL(resultUrl).toString() + taskid), headers: headers);
   updateCookie(response);
 
   if (response.statusCode == 200) {
@@ -203,8 +162,8 @@ Future<SynoBt> getResults(String taskid) async {
   }
 }
 
-Future<SynoDownloadTasks> getTasks() async {
-  final response = await http.get(makeURL(TASKS_URL), headers: headers);
+Future<SynoDownloadTasks> getDownloadTasks() async {
+  final response = await http.get(makeURL(tasksUrl), headers: headers);
   updateCookie(response);
 
   if (response.statusCode == 200) {
@@ -215,9 +174,9 @@ Future<SynoDownloadTasks> getTasks() async {
   }
 }
 
-Future<Map<String, dynamic>> createDownload(String uri) async {
+Future<Map<String, dynamic>> createDownloadTask(String uri) async {
   final response = await http.get(
-      Uri.parse(makeURL(CREATE_DOWNLOAD).toString() + uri),
+      Uri.parse(makeURL(createDownload).toString() + uri),
       headers: headers);
   updateCookie(response);
 
@@ -228,9 +187,9 @@ Future<Map<String, dynamic>> createDownload(String uri) async {
   };
 }
 
-Future<void> deleteDownload(String id) async {
+Future<void> deleteDownloadTask(String id) async {
   final response = await http.get(
-      Uri.parse(makeURL(DELETE_DOWNLOAD).toString() + id),
+      Uri.parse(makeURL(deleteDownload).toString() + id),
       headers: headers);
   updateCookie(response);
 }

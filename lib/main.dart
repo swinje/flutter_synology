@@ -27,13 +27,13 @@ void main() => runApp(MaterialApp(
     ));
 
 class MyApp extends StatefulWidget {
-  MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
-  _MyAppState createState() => _MyAppState();
+  MyAppState createState() => MyAppState();
 }
 
-class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
+class MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -117,7 +117,7 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
     FocusScope.of(context).requestFocus(FocusNode());
     FocusScope.of(context).unfocus();
 
-    if (searchController.text.length == 0) return;
+    if (searchController.text.isEmpty) return;
 
     setState(() {
       searchInProgress = true;
@@ -128,8 +128,9 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
       getData(taskid);
       timer =
           Timer.periodic(Duration(seconds: 15), (Timer t) => getData(taskid));
-    } else
+    } else {
       print('taskid null');
+    }
   }
 
   void stopSearch() {
@@ -169,7 +170,7 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
       enabled: !searchInProgress,
       style: Theme.of(context).textTheme.titleLarge?.copyWith(
           fontSize: 24.0, color: Theme.of(context).colorScheme.onPrimary),
-      decoration: new InputDecoration(
+      decoration: InputDecoration(
           fillColor: Theme.of(context).colorScheme.secondary,
           filled: true,
           contentPadding:
@@ -206,9 +207,9 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
                 seeds: sbt.seeds)));
   }
 
-  refresh(BuildContext context, int index) {
+  void refresh(BuildContext context, int index) {
     searchResults.data.items[index].picked = true;
-    createDownload(searchResults.data.items[index].downloadUri);
+    createDownloadTask(searchResults.data.items[index].downloadUri);
     setState(() {});
     Navigator.push(
       context,
@@ -217,7 +218,7 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
     );
   }
 
-  deleted(String id) {}
+  void deleted(String id) {}
 
   void showSettings(BuildContext context) async {
     final bool? didPop = await Navigator.push(
@@ -267,13 +268,15 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
                       },
                     );
                     if (link != null && link.isNotEmpty) {
-                      final result = await createDownload(link);
-                      final bool success = result['success'] ?? false;
-                      final message = success
-                          ? 'Download created'
-                          : 'Download failed with code: ${result['code']}';
-                      final snackBar = SnackBar(content: Text(message));
-                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                      final result = await createDownloadTask(link);
+                      if (mounted && context.mounted) {
+                        final bool success = result['success'] ?? false;
+                        final message = success
+                            ? 'Download created'
+                            : 'Download failed with code: ${result['code']}';
+                        final snackBar = SnackBar(content: Text(message));
+                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                      }
                     }
                   },
                 ),
@@ -366,10 +369,10 @@ class _MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
                     ? FloatingActionButton(
                         onPressed: runSearch,
                         tooltip: 'Search',
-                        child: new Icon(Icons.search))
+                        child: Icon(Icons.search))
                     : FloatingActionButton(
                         onPressed: stopSearch,
                         tooltip: 'Cancel',
-                        child: new Icon(Icons.cancel))));
+                        child: Icon(Icons.cancel))));
   }
 }

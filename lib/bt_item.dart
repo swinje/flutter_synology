@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class BTItem extends StatelessWidget {
-  BTItem({
-    required Key? key,
+  const BTItem({
+    required super.key,
     required this.notifyParent,
     required this.index,
     required this.picked,
@@ -10,7 +10,7 @@ class BTItem extends StatelessWidget {
     required this.link,
     required this.peers,
     required this.seeds,
-  }) : super(key: key);
+  });
 
   final Function(BuildContext context, int index) notifyParent;
   final int index;
@@ -35,10 +35,10 @@ class BTItem extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               SizedBox(width: 10),
-              Container(
+              SizedBox(
                 width: width - 40,
                 child: Text(
-                  '$title',
+                  title,
                   maxLines: null,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontSize: 16.0,

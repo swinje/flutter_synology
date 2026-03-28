@@ -4,16 +4,17 @@ import 'syno_download_tasks.dart';
 import 'dart:async';
 
 class TaskScreen extends StatefulWidget {
-  TaskScreen({Key? key, required this.notifyParent}) : super(key: key);
+  const TaskScreen({super.key, required this.notifyParent});
 
   final Function(String id) notifyParent;
 
   @override
-  _TaskScreenState createState() => _TaskScreenState();
+  State<TaskScreen> createState() => TaskScreenState();
 }
 
-class _TaskScreenState extends State<TaskScreen> {
-  SynoDownloadTasks searchResults = SynoDownloadTasks(data: Data(tasks: [], total: 0, offset: 0), success: false);
+class TaskScreenState extends State<TaskScreen> {
+  SynoDownloadTasks searchResults = SynoDownloadTasks(
+      data: Data(tasks: [], total: 0, offset: 0), success: false);
   bool searchInProgress = true;
   late String sid;
   Timer? t;
@@ -43,7 +44,7 @@ class _TaskScreenState extends State<TaskScreen> {
       searchInProgress = true;
     });
 
-    searchResults = await getTasks();
+    searchResults = await getDownloadTasks();
 
     if (!mounted) return;
     setState(() {
@@ -52,7 +53,7 @@ class _TaskScreenState extends State<TaskScreen> {
   }
 
   void runDelete(int index, String id) async {
-    await deleteDownload(id);
+    await deleteDownloadTask(id);
     setState(() {
       searchResults.data.tasks.removeAt(index);
     });
@@ -61,8 +62,9 @@ class _TaskScreenState extends State<TaskScreen> {
   String fixString(String str) {
     int chunks = (str.length / 25).floor();
     String retStr = '';
-    for (int i = 0; i < chunks; i++)
-      retStr = retStr + str.substring(i * 25, (i + 1) * 25) + '\n';
+    for (int i = 0; i < chunks; i++) {
+      retStr = '$retStr${str.substring(i * 25, (i + 1) * 25)}\n';
+    }
     retStr = retStr + str.substring(chunks * 25);
     return retStr;
   }
@@ -80,7 +82,7 @@ class _TaskScreenState extends State<TaskScreen> {
                   onPressed: () => Navigator.pop(context, false),
                 ),
                 title: Text('Downloads')),
-            body: (searchResults.data.tasks.length > 0)
+            body: (searchResults.data.tasks.isNotEmpty)
                 ? Scrollbar(
                     child: ListView.builder(
                         itemCount: searchResults.data.tasks.length,
@@ -91,7 +93,8 @@ class _TaskScreenState extends State<TaskScreen> {
                               decoration: BoxDecoration(
                                 color: Theme.of(context).colorScheme.surface,
                                 border: Border.all(
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                   width: 1,
                                 ),
                               ),
@@ -102,13 +105,17 @@ class _TaskScreenState extends State<TaskScreen> {
                                       ? Theme.of(context).colorScheme.secondary
                                       : task.status == 'error'
                                           ? Theme.of(context).colorScheme.error
-                                          : Theme.of(context).colorScheme.surface,
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .surface,
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: <Widget>[
                                       IconButton(
                                         icon: Icon(Icons.delete),
-                                        highlightColor: Theme.of(context).colorScheme.secondary,
+                                        highlightColor: Theme.of(context)
+                                            .colorScheme
+                                            .secondary,
                                         onPressed: () {
                                           runDelete(index, task.id);
                                           widget.notifyParent(task.id);
@@ -119,8 +126,8 @@ class _TaskScreenState extends State<TaskScreen> {
                                             CrossAxisAlignment.start,
                                         children: <Widget>[
                                           Flexible(
-                                              child: new Container(
-                                                  padding: new EdgeInsets.only(
+                                              child: Container(
+                                                  padding: EdgeInsets.only(
                                                       top: 20.0),
                                                   child: SingleChildScrollView(
                                                       child: Text(
@@ -128,23 +135,29 @@ class _TaskScreenState extends State<TaskScreen> {
                                                     overflow:
                                                         TextOverflow.ellipsis,
                                                     maxLines: null,
-                                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                                      fontSize: 16.0,
-                                                      color: Theme.of(context).colorScheme.onSurface,
-                                                    ),
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.copyWith(
+                                                          fontSize: 16.0,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .onSurface,
+                                                        ),
                                                   )))),
                                           Text(
-                                              task.status[0].toUpperCase() +
-                                                  task.status.substring(1) +
-                                                  ' (' +
-                                                  (task.size / 1000000)
-                                                      .toStringAsFixed(0) +
-                                                  ' MB)',
-                                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                                fontSize: 16.0,
-                                                fontWeight: FontWeight.bold,
-                                                color: Theme.of(context).colorScheme.onSurface,
-                                              ))
+                                              '${task.status[0].toUpperCase()}${task.status.substring(1)} (${(task.size / 1000000).toStringAsFixed(0)} MB)',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium
+                                                  ?.copyWith(
+                                                    fontSize: 16.0,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurface,
+                                                  ))
                                         ],
                                       ),
                                       SizedBox(width: 30),
@@ -152,21 +165,28 @@ class _TaskScreenState extends State<TaskScreen> {
                                               task.status == 'seeding' ||
                                               task.status == 'error' ||
                                               task.status == "paused")
-                                          ? Container(child: Text(task.status))
+                                          ? Text(task.status)
                                           : SizedBox(
                                               height: 30,
                                               width: 30,
                                               child: Container(
-                                                  color: Theme.of(context).colorScheme.tertiaryContainer,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .tertiaryContainer,
                                                   child: Center(
                                                       child: Text(
-                                                    task.downloaded.toString() +
-                                                        "%",
-                                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 18,
-                                                        color: Theme.of(context).colorScheme.onTertiaryContainer),
+                                                    "${task.downloaded}%",
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            fontSize: 18,
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .colorScheme
+                                                                .onTertiaryContainer),
                                                   ))))
                                       //CircularProgressIndicator()
                                     ],
@@ -181,10 +201,10 @@ class _TaskScreenState extends State<TaskScreen> {
                                 child: Stack(
                                   children: <Widget>[
                                     Center(
-                                      child: Container(
+                                      child: SizedBox(
                                         width: 200,
                                         height: 200,
-                                        child: new CircularProgressIndicator(
+                                        child: CircularProgressIndicator(
                                             //strokeWidth: 15,
                                             //value: 1.0,
                                             ),
@@ -195,9 +215,14 @@ class _TaskScreenState extends State<TaskScreen> {
                                 ),
                               )
                             : Text('No downloads',
-                                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                  fontSize: 24.0,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ))))));
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineLarge
+                                    ?.copyWith(
+                                      fontSize: 24.0,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ))))));
   }
 }

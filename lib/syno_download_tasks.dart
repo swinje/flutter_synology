@@ -32,7 +32,7 @@ class SynoDownloadTasks {
 
   @override
   String toString() {
-    return data.toString() + " success " + success.toString();
+    return "$data success $success";
   }
 }
 
@@ -61,7 +61,7 @@ class Data {
 
   @override
   String toString() {
-    return total.toString() + " " + offset.toString() + " " + tasks.toString();
+    return "$total $offset $tasks";
   }
 }
 

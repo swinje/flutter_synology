@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
-  SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
-  _SettingsScreenState createState() => _SettingsScreenState();
+  State<SettingsScreen> createState() => SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class SettingsScreenState extends State<SettingsScreen> {
   final _formKey = GlobalKey<FormState>();
   late SharedPreferences prefs;
   bool _obscureText = true;
@@ -51,7 +51,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await prefs.setString('port', portController.text.trim());
     await prefs.setString('destination', destinationController.text.trim());
     await prefs.setBool('twoFactor', _twoFactor);
-    Navigator.pop(context, false);
+    if (mounted) {
+      Navigator.pop(context, false);
+    }
   }
 
   @override
@@ -244,6 +246,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       Container(
                         width: width,
+                        margin: const EdgeInsets.all(20.0),
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(context)
@@ -256,7 +259,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onPressed: () => saveGoBack(),
                           child: Text('Save'),
                         ),
-                        margin: const EdgeInsets.all(20.0),
                       )
                     ],
                   ),
