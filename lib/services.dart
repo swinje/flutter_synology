@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:download/syno_download_tasks.dart';
+import 'package:logging/logging.dart';
 import 'package:http/http.dart' as http;
 import 'syno_auth.dart';
 import 'syno_download.dart';
@@ -21,6 +22,8 @@ late SharedPreferences prefs;
 late String username, password, server, port, destination, ver;
 late bool twoFactorEnabled;
 
+final _logger = Logger('Services');
+
 Uri makeURL(int type, {String? otpCode}) {
   switch (type) {
     case sidUrl:
@@ -41,7 +44,7 @@ Uri makeURL(int type, {String? otpCode}) {
           'http://$server:$port/webapi/DownloadStation/btsearch.cgi?api=SYNO.DownloadStation.BTSearch&version=1&method=list&offset=0&limit=25&sort_by=seeds&filter_category=&filter_title=&sort_direction=DESC&taskid=');
     case tasksUrl:
       return Uri.parse(
-          'http://$server:$port/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=list&additional=file');
+          'http://$server:$port/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=list&additional=transfer');
     case createDownload:
       return Uri.parse(
           'http://$server:$port/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=create&destination=$destination&uri=');
@@ -83,7 +86,7 @@ Future<String> fetchSID({String? otpCode}) async {
   if (response.statusCode == 200) {
     if (response.body.contains('error')) {
       SynoError sError = SynoError.fromJson(json.decode(response.body));
-      print('Error fetchSID ${sError.error.code}');
+      _logger.severe('Error fetchSID ${sError.error.code}');
       return ''; // Return empty string instead of null
     }
     return SynoDownload.fromJson(json.decode(response.body)).data.sid;
@@ -104,14 +107,14 @@ Future<String> fetchAuth({String? otpCode}) async {
   if (response.statusCode == 200) {
     final authData = SynoAuth.fromJson(json.decode(response.body)).data;
     if (authData == null) {
-      print('Error: authData is null');
+      _logger.severe('Error: authData is null');
       return '';
     }
     final Syno? downloadStationTask = authData.synoDownloadStationTask;
     if (downloadStationTask != null) {
       ver = downloadStationTask.maxVersion.toString();
     } else {
-      print('Warning: synoDownloadStationTask is null');
+      _logger.warning('Warning: synoDownloadStationTask is null');
       ver = '1';
     }
     String sid;
@@ -139,7 +142,7 @@ Future<String> doSearch(String searchTerm) async {
 
     if (jsonResponse.containsKey('error')) {
       String err = SynoError.fromJson(jsonResponse).error.code.toString();
-      print('Error search $err');
+      _logger.severe('Error search $err');
       return "";
     }
     String taskid = SynoTask.fromJson(json.decode(response.body)).data.taskid;

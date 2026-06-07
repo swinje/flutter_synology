@@ -21,6 +21,7 @@ dependencies:
     sdk: flutter
   http:
   shared_preferences:
+  logging: ^1.2.0
   flutter_launcher_icons:
 
 
@@ -80,5 +81,3 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
-
-

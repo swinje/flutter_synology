@@ -86,24 +86,28 @@ class Task {
     required this.statusExtra,
   });
 
-  factory Task.fromJson(Map<String, dynamic> json) => Task(
-      id: json["id"],
-      type: json["type"],
-      username: json["username"],
-      title: json["title"],
-      size: json["size"],
-      status: json["status"],
-      statusExtra: json["status_extra"],
-      downloaded: json["additional"] != null
-          ? json["additional"]["file"] != null
-              ? json["additional"]["file"].contains(1)
-                  ? (json["additional"]["file"][1]['size_downloaded'] /
-                          json["size"] *
-                          100)
-                      .round()
-                  : 0
-              : 0
-          : 0);
+  factory Task.fromJson(Map<String, dynamic> json) {
+    final size = int.tryParse(json["size"]?.toString() ?? '') ?? 0;
+    int downloadedPercent = 0;
+
+    if (size > 0 && json["additional"]?["transfer"] != null) {
+      final downloadedSize = double.tryParse(
+              json["additional"]["transfer"]["size_downloaded"]?.toString() ??
+                  '') ??
+          0.0;
+      downloadedPercent = (downloadedSize / size * 100).round();
+    }
+
+    return Task(
+        id: json["id"],
+        type: json["type"],
+        username: json["username"],
+        title: json["title"],
+        size: size,
+        status: json["status"],
+        statusExtra: json["status_extra"],
+        downloaded: downloadedPercent);
+  }
 
   Map<String, dynamic> toJson() => {
         "id": id,

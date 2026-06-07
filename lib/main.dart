@@ -1,30 +1,53 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import 'services.dart';
 import 'syno_bt.dart';
 import 'bt_item.dart';
 import 'task_screen.dart';
 import 'settings_screen.dart';
 
-void main() => runApp(MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Download',
-      theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
-        hintColor: Colors.amber,
-        fontFamily: 'Roboto',
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.deepPurple,
-          foregroundColor: Colors.white,
-        ),
-        textTheme: TextTheme(
-          headlineLarge: TextStyle(fontSize: 36.0, fontWeight: FontWeight.bold),
-          titleLarge: TextStyle(fontSize: 24.0, fontStyle: FontStyle.normal),
-          bodyMedium: TextStyle(fontSize: 14.0, fontFamily: 'Hind'),
-        ),
+void main() {
+  // Setup logging
+  Logger.root.level = Level.ALL; // Log everything
+  Logger.root.onRecord.listen((record) {
+    debugPrint('${record.level.name}: ${record.time}: ${record.message}');
+  });
+
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    title: 'Download',
+    theme: AppTheme.light,
+    darkTheme: AppTheme.dark,
+    themeMode: ThemeMode.system,
+    home: MyApp(),
+  ));
+}
+
+class AppTheme {
+  static ThemeData get light => _build(Brightness.light);
+  static ThemeData get dark => _build(Brightness.dark);
+
+  static ThemeData _build(Brightness brightness) {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: Colors.deepPurple,
+      brightness: brightness,
+      secondary: Colors.amber,
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      fontFamily: 'Roboto',
+      appBarTheme: AppBarTheme(
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+        centerTitle: true,
+        elevation: 2,
       ),
-      home: MyApp(),
-    ));
+    );
+  }
+}
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -129,7 +152,9 @@ class MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
       timer =
           Timer.periodic(Duration(seconds: 15), (Timer t) => getData(taskid));
     } else {
-      print('taskid null');
+      setState(() {
+        searchInProgress = false;
+      });
     }
   }
 
@@ -142,42 +167,34 @@ class MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
   }
 
   Widget progressIndicator() {
+    final theme = Theme.of(context);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         Text("Loading...",
-            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                )),
+            style: theme.textTheme.headlineLarge?.copyWith(
+              color: theme.colorScheme.primary,
+            )),
         const SizedBox(height: 20),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 50.0),
-          child: LinearProgressIndicator(
-            valueColor:
-                AlwaysStoppedAnimation(Theme.of(context).colorScheme.secondary),
-          ),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 50.0),
+          child: LinearProgressIndicator(),
         ),
       ],
     );
   }
 
   Widget searchField() {
+    final theme = Theme.of(context);
     return TextFormField(
-      cursorColor: Colors.white,
-      cursorWidth: 3.0,
       controller: searchController,
       focusNode: searchFocusNode,
       enabled: !searchInProgress,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          fontSize: 24.0, color: Theme.of(context).colorScheme.onPrimary),
-      decoration: InputDecoration(
-          fillColor: Theme.of(context).colorScheme.secondary,
+      style: theme.textTheme.titleLarge,
+      decoration: const InputDecoration(
           filled: true,
-          contentPadding:
-              EdgeInsets.only(bottom: 10.0, left: 10.0, right: 10.0),
           labelText: "Enter search term",
-          labelStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontSize: 20.0, color: Theme.of(context).colorScheme.onPrimary)),
+          prefixIcon: Icon(Icons.search)),
     );
   }
 
@@ -186,25 +203,18 @@ class MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
 
     Item sbt = searchResults.data.items[index];
 
-    return Container(
-        padding: EdgeInsets.symmetric(vertical: 5.0),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          border: Border.all(
-            color: Theme.of(context).colorScheme.onSurface,
-            width: 1,
-          ),
-        ),
-        child: SingleChildScrollView(
-            child: BTItem(
-                key: Key("btitem"),
-                notifyParent: refresh,
-                index: index,
-                picked: sbt.picked,
-                title: sbt.title,
-                link: sbt.downloadUri,
-                peers: sbt.peers,
-                seeds: sbt.seeds)));
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      child: BTItem(
+          key: Key("btitem_$index"),
+          notifyParent: refresh,
+          index: index,
+          picked: sbt.picked,
+          title: sbt.title,
+          link: sbt.downloadUri,
+          peers: sbt.peers,
+          seeds: sbt.seeds),
+    );
   }
 
   void refresh(BuildContext context, int index) {
@@ -319,26 +329,14 @@ class MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
                                   child: Text('No downloads',
                                       style: Theme.of(context)
                                           .textTheme
-                                          .headlineLarge
-                                          ?.copyWith(
-                                            fontSize: 24.0,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurface,
-                                          )))
+                                          .titleLarge))
                               : startingUp
                                   ? Container(
                                       alignment: Alignment(0.0, 0.0),
                                       child: Text('Connecting...',
                                           style: Theme.of(context)
                                               .textTheme
-                                              .headlineLarge
-                                              ?.copyWith(
-                                                fontSize: 24.0,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface,
-                                              )))
+                                              .titleLarge))
                                   : Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
@@ -353,13 +351,7 @@ class MyAppState extends State<MyApp> with AutomaticKeepAliveClientMixin {
                                         Text('Check settings',
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .headlineLarge
-                                                ?.copyWith(
-                                                  fontSize: 24.0,
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onSurface,
-                                                ))
+                                                .titleLarge)
                                       ],
                                     ))
             ]),
